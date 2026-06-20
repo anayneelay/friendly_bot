@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'ai_service.dart';
 
 void main() {
   runApp(const FriendApp());
@@ -54,20 +55,52 @@ class _ChatPageState extends State<ChatPage> {
     return "You said: $text\nTell me more about that.";
   }
 
-  void sendMessage() {
-    String text = controller.text.trim();
+  Future<void> sendMessage() async {
 
-    if (text.isEmpty) return;
+  String text = controller.text.trim();
 
-    String reply = getReply(text);
+  if (text.isEmpty) return;
+
+  controller.clear();
+
+  setState(() {
+
+    messages.add("You: $text");
+
+    messages.add("Alex: typing...");
+
+  });
+
+
+  try {
+
+    String reply = await AIService.ask(text);
+
 
     setState(() {
-      messages.add("You: $text");
+
+      messages.removeLast();
+
       messages.add("Alex: $reply");
+
     });
 
-    controller.clear();
   }
+
+  catch(e) {
+
+    setState(() {
+
+      messages.removeLast();
+
+      messages.add("Alex: ERROR\n$e");
+
+    });
+
+  }
+
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -112,7 +145,11 @@ class _ChatPageState extends State<ChatPage> {
                 const SizedBox(width: 10),
 
                 ElevatedButton(
-                  onPressed: sendMessage,
+                  onPressed: () async {
+
+   await sendMessage();
+
+},
                   child: const Text("Send"),
                 ),
 
